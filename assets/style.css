@@ -1,0 +1,13 @@
+.container > .movie {
+  row-gap: 1rem;
+}
+
+/* * {
+  border: 1px solid red;
+} */
+
+@media (max-width: 720px) {
+  .container > .movie {
+    justify-content: center;
+  }
+}
