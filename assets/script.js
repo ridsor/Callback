@@ -1,16 +1,13 @@
 const RENDER_EVENT = 'render_event';
+// document.addEventListener('DOMContentLoaded', function () {
+//   document.dispatchEvent(new Event(RENDER_EVENT));
+// });
 
 document.addEventListener(RENDER_EVENT, function () {
-  $.ajax({
-    url: 'http://www.omdbapi.com/',
-    data: {
-      apikey: 'b2ede8d5',
-      s: $('#search').val(),
-    },
-    method: 'get',
-    dataType: 'json',
-    success: (results) => {
-      const { Search: movies } = results;
+  fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&s=${$('#search').val()}`)
+    .then((response) => response.json())
+    .then((response) => {
+      const { Search: movies } = response;
 
       let cards = '';
 
@@ -24,27 +21,19 @@ document.addEventListener(RENDER_EVENT, function () {
         $('.modal-content').html('');
         const id = this.dataset.id;
 
-        $.ajax({
-          url: `http://www.omdbapi.com/`,
-          data: {
-            apikey: 'b2ede8d5',
-            i: id,
-          },
-          method: 'get',
-          dataType: 'json',
-          success: (results) => {
-            let detailMovie = makeMovieDetail(results);
+        fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&i=${id}`)
+          .then((response) => response.json())
+          .then((response) => {
+            let detailMovie = makeMovieDetail(response);
             $('.modal-content').html(detailMovie);
-          },
-          erorr: (e) => console.log(e),
-        });
+          })
+          .catch((e) => console.log(e));
       });
-    },
-    error: (e) => console.log(e),
-  });
+    })
+    .catch((e) => console.log(e));
 });
 
-$('#button-addon2').on('click', function () {
+$('#search-button').on('click', function () {
   document.dispatchEvent(new Event(RENDER_EVENT));
 });
 
@@ -54,22 +43,22 @@ $('#search').on('keypress', function (e) {
   }
 });
 
-function makeCard({ Title, Year, Poster, imdbID }) {
-  return `<div class="col-xl-3 p-0 col-lg-4 col-md-6 col-10">
+const makeCard = ({ Title, Year, Poster, imdbID }) => {
+  return `<div class="p-1">
               <div class="card">
-                <img src="${Poster}" alt="${Title}" class="card-img-top"/>
+                <img src="${Poster}" alt="${Title}" class="card-img-top poster"/>
                 <div class="card-body">
                   <h5 class="card-title">${Title}</h5>
-                  <small class="text-muted">${Year}</small>
+                  <small class="text-muted year">${Year}</small>
                 </div>
                 <div class="card-footer">
                   <button type="button" class="btn btn-primary modal-detail-btn" data-bs-toggle="modal" data-bs-target="#movieDetailModal" data-id="${imdbID}">Show Details</button>
                 </div>
               </div>
             </div>`;
-}
+};
 
-function makeMovieDetail({ Title, Year, Actors, Director, Writer, Genre, Plot, Poster }) {
+const makeMovieDetail = ({ Title, Year, Actors, Director, Writer, Genre, Plot, Poster }) => {
   return `<div class="modal-header">
             <h4 class="modal-title" id="exampleModalLabel">${Title} (${Year})</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -98,4 +87,4 @@ function makeMovieDetail({ Title, Year, Actors, Director, Writer, Genre, Plot, P
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>`;
-}
+};
