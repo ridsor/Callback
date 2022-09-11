@@ -1,47 +1,66 @@
 const RENDER_EVENT = 'render_event';
+const search = document.getElementById('search');
+const btnSearch = document.getElementById('search-button');
+
 // document.addEventListener('DOMContentLoaded', function () {
 //   document.dispatchEvent(new Event(RENDER_EVENT));
 // });
 
-document.addEventListener(RENDER_EVENT, function () {
-  fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&s=${$('#search').val()}`)
-    .then((response) => response.json())
-    .then((response) => {
-      const { Search: movies } = response;
+document.addEventListener(RENDER_EVENT, async function () {
+  const movies = await getMovies(search.value);
 
-      let cards = '';
-
-      for (const movie of movies) {
-        cards += makeCard(movie);
-      }
-
-      $('.movie').html(cards);
-
-      $('.modal-detail-btn').on('click', function () {
-        $('.modal-content').html('');
-        const id = this.dataset.id;
-
-        fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&i=${id}`)
-          .then((response) => response.json())
-          .then((response) => {
-            let detailMovie = makeMovieDetail(response);
-            $('.modal-content').html(detailMovie);
-          })
-          .catch((e) => console.log(e));
-      });
-    })
-    .catch((e) => console.log(e));
+  updateUI(movies);
 });
 
-$('#search-button').on('click', function () {
+btnSearch.addEventListener('click', function () {
   document.dispatchEvent(new Event(RENDER_EVENT));
 });
 
-$('#search').on('keypress', function (e) {
+search.addEventListener('keyup', function (e) {
   if (e.which == 13) {
     document.dispatchEvent(new Event(RENDER_EVENT));
   }
 });
+
+// event binding merupakan event untuk element yang belum ada
+document.addEventListener('click', async function (e) {
+  if (e.target.classList.contains('modal-detail-btn')) {
+    const id = e.target.dataset.id;
+
+    document.querySelector('.modal-content').innerHTML = makeLoaderForModal();
+
+    const movieDetail = await getMovieDetail(id);
+
+    updateUIMovieDetail(movieDetail);
+  }
+});
+
+const updateUIMovieDetail = (movie) => {
+  const elementMovieDetail = makeMovieDetail(movie);
+
+  document.querySelector('.modal-content').innerHTML = elementMovieDetail;
+};
+
+const getMovieDetail = (id) => {
+  return fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&i=${id}`)
+    .then((r) => r.json())
+    .catch((e) => console.log(e));
+};
+
+const updateUI = (movies) => {
+  let elementMovies = '';
+
+  movies.forEach((movie) => (elementMovies += makeCard(movie)));
+
+  document.querySelector('.movie').innerHTML = elementMovies;
+};
+
+const getMovies = (keyword) => {
+  return fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&s=${keyword}`)
+    .then((r) => r.json())
+    .then((r) => r.Search)
+    .catch((e) => console.log(e));
+};
 
 const makeCard = ({ Title, Year, Poster, imdbID }) => {
   return `<div class="p-1">
@@ -66,8 +85,8 @@ const makeMovieDetail = ({ Title, Year, Actors, Director, Writer, Genre, Plot, P
           <div class="modal-body">
             <div class="container-fluid">
               <div class="row">
-                <div class="col-md-3">
-                  <img src="${Poster}" alt="" class="img-fluid" />
+                <div class="col-md-3 text-center">
+                  <img src="${Poster}" alt="${Title}" class="img-fluid poster" />
                 </div>
                 <div class="col-md">
                   <ul class="list-group">
@@ -81,10 +100,18 @@ const makeMovieDetail = ({ Title, Year, Actors, Director, Writer, Genre, Plot, P
                     </li>
                   </ul>
                 </div>
-              </div>
+                </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>`;
+};
+
+const makeLoaderForModal = () => {
+  return `<div class="modal-body">
+    <div class="container-fluid text-center">
+      <img src="./assets/img/loader.gif" alt="">
+    </div>
+  </div>`;
 };
