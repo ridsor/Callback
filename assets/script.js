@@ -7,9 +7,12 @@ const btnSearch = document.getElementById('search-button');
 // });
 
 document.addEventListener(RENDER_EVENT, async function () {
-  const movies = await getMovies(search.value);
-
-  updateUI(movies);
+  try {
+    const movies = await getMovies(search.value);
+    updateUI(movies);
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 btnSearch.addEventListener('click', function () {
@@ -58,8 +61,7 @@ const updateUI = (movies) => {
 const getMovies = (keyword) => {
   return fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&s=${keyword}`)
     .then((r) => r.json())
-    .then((r) => r.Search)
-    .catch((e) => console.log(e));
+    .then((r) => r.Search);
 };
 
 const makeCard = ({ Title, Year, Poster, imdbID }) => {
