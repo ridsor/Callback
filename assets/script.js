@@ -32,9 +32,12 @@ document.addEventListener('click', async function (e) {
 
     document.querySelector('.modal-content').innerHTML = makeLoaderForModal();
 
-    const movieDetail = await getMovieDetail(id);
-
-    updateUIMovieDetail(movieDetail);
+    try {
+      const movieDetail = await getMovieDetail(id);
+      updateUIMovieDetail(movieDetail);
+    } catch (err) {
+      console.log(err);
+    }
   }
 });
 
@@ -44,11 +47,7 @@ const updateUIMovieDetail = (movie) => {
   document.querySelector('.modal-content').innerHTML = elementMovieDetail;
 };
 
-const getMovieDetail = (id) => {
-  return fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&i=${id}`)
-    .then((r) => r.json())
-    .catch((e) => console.log(e));
-};
+const getMovieDetail = (id) => fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&i=${id}`).then((r) => r.json());
 
 const updateUI = (movies) => {
   let elementMovies = '';
@@ -61,7 +60,10 @@ const updateUI = (movies) => {
 const getMovies = (keyword) => {
   return fetch(`http://www.omdbapi.com/?apikey=b2ede8d5&s=${keyword}`)
     .then((r) => r.json())
-    .then((r) => r.Search);
+    .then((r) => {
+      if (r.Response === 'False') throw new Error(r.Error);
+      return r.Search;
+    });
 };
 
 const makeCard = ({ Title, Year, Poster, imdbID }) => {
